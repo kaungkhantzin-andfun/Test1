@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/register', [UserRegisterController::class, 'register']);
+Route::post('/send-otp', [UserRegisterController::class, 'sendOtp']);
+Route::post('/verify-otp', [UserRegisterController::class, 'verifyOtp']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     

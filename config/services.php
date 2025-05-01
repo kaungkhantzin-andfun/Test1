@@ -13,7 +13,11 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
-
+    'twilio' => [
+    'sid' => 'ACeae618f88d660bd2a3c79226f35be47a',
+    'token' => 'cc88ca392b9b1a0b2f33a2f12052c551',
+    'from' => '+19565393202',
+],
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
