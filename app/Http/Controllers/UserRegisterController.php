@@ -145,53 +145,29 @@ class UserRegisterController extends Controller
      */
     public function register(Request $request): JsonResponse
     {
-        // Check if user exists with this phone number
-        $existingUser = User::where('phone', $request->phone)->first();
-        
-        // Different validation rules based on whether we're updating or creating
-        if ($existingUser && $request->has('otp')) {
-            // For existing user with OTP, don't check uniqueness
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'phone' => 'required|string|regex:/^09[0-9]{9}$/',
-                'password' => 'required|string|min:8',
-                'role' => 'required|in:admin,astrology,customer',
-                'otp' => 'required|string|size:6'
-            ]);
-        } else {
-            // For new user, check uniqueness
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'phone' => 'required|string|regex:/^09[0-9]{9}$/|unique:users',
-                'password' => 'required|string|min:8',
-                'role' => 'required|in:admin,astrology,customer'
-            ]);
-        }
+        $rules = [
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|regex:/^09[0-9]{9}$/',
+            'password' => 'required|string|min:8',
+            'role' => 'required|in:admin,astrology,customer'
+        ];
+    
+        $validator = Validator::make($request->all(), $rules);
     
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
     
         try {
-            // Use the existing user variable we already defined
-            $user = $existingUser;
+            $user = User::where('phone', $request->phone)->first();
     
             if ($user) {
-                // Verify OTP for existing user - only check if OTP matches, don't check expiration
-                if ($user->otp !== $request->otp) {
-                    return response()->json([
-                        'error' => 'Invalid OTP'
-                    ], 422);
-                }
-    
-                // Update user with new information
+                // Update existing user
                 $user->update([
                     'name' => $request->name,
                     'password' => Hash::make($request->password),
                     'role' => $request->role,
                     'is_verified' => true,
-                    'otp' => null,
-                    'expires_at' => null
                 ]);
             } else {
                 // Create new user
@@ -200,11 +176,10 @@ class UserRegisterController extends Controller
                     'phone' => $request->phone,
                     'password' => Hash::make($request->password),
                     'role' => $request->role,
-                    'is_verified' => false
+                    'is_verified' => true,
                 ]);
             }
     
-            // Generate a token
             $token = $user->createToken('auth_token')->plainTextToken;
     
             return response()->json([
@@ -227,4 +202,7 @@ class UserRegisterController extends Controller
             ], 500);
         }
     }
+    
+
+    
 }
