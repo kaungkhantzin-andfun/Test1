@@ -8,19 +8,27 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
     public function login(LoginRequest $request)
-    {
-        $user = User::where('email', $request->email)->first();
+    {  
+      
+        Log::info('Login attempt started');
+        Log::info('Request data:', $request->all());
+        
+        $user = User::where('phone', $request->phone)->first();
+        Log::info('User found:', $user ? ['id' => $user->id, 'phone' => $user->phone] : 'No user found');
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            Log::info('Login failed - invalid credentials');
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'phone' => ['The provided credentials are incorrect.'],
             ]);
         }
 
+        Log::info('Login successful');
         return response()->json([
             'token' => $user->createToken($request->device_name)->plainTextToken,
             'user' => $user,
