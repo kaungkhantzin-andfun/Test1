@@ -12,21 +12,21 @@ class UsersTableSeeder extends Seeder
     {
         User::create([
             'name' => 'Admin User',
-            'email' => 'admin@example.com',
+            'phone' => '09123456789',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
         User::create([
             'name' => 'Astrology User',
-            'email' => 'astrology@example.com',
+            'phone' => '09234567890',
             'password' => Hash::make('password'),
             'role' => 'astrology',
         ]);
 
         User::create([
             'name' => 'Customer User',
-            'email' => 'customer@example.com',
+            'phone' => '09345678901',
             'password' => Hash::make('password'),
             'role' => 'customer',
         ]);

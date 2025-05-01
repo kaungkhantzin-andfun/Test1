@@ -22,7 +22,7 @@ class UserRegisterController extends Controller
         // Validate the request
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'required|string|regex:/^09[0-9]{9}$/|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|in:admin,astrology,customer'
         ]);
@@ -35,7 +35,7 @@ class UserRegisterController extends Controller
             // Create the user
             $user = User::create([
                 'name' => $request->name,
-                'email' => $request->email,
+                'phone' => $request->phone,
                 'password' => Hash::make($request->password),
                 'role' => $request->role
             ]);
@@ -48,7 +48,7 @@ class UserRegisterController extends Controller
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
-                    'email' => $user->email,
+                    'phone' => $user->phone,
                     'email_verified_at' => $user->email_verified_at,
                     'role' => $user->role,
                     'created_at' => $user->created_at,
