@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserRegisterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
@@ -13,7 +14,7 @@ Route::post('/send-otp', [UserRegisterController::class, 'sendOtp']);
 Route::post('/verify-otp', [UserRegisterController::class, 'verifyOtp']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
-    
+    Route::post('/user/edit', [UserRegisterController::class, 'useredit']);
     // Role-specific profile routes
     Route::get('/admin/profile', [ProfileController::class, 'adminProfile']);
     Route::get('/astrology/profile', [ProfileController::class, 'astrologyProfile']);

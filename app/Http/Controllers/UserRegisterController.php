@@ -44,24 +44,24 @@ class UserRegisterController extends Controller
         $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
         $expiresAt = now()->addMinutes(5);
 
-        // Check if user exists, create if not
+
         $user = User::firstOrCreate(
             ['phone' => $phone],
             [
-                'name' => 'New User', // You might want to update this later
-                'password' => Hash::make(Str::random(16)), // Temporary password
+                'name' => 'New User',
+                'password' => Hash::make(Str::random(16)),
                 'role' => 'customer',
                 'is_verified' => false
             ]
         );
 
-        // Update OTP and expiration
+
         $user->update([
             'otp' => $otp,
             'expires_at' => $expiresAt
         ]);
 
-        // Debug logging
+
         Log::info('OTP sent successfully', [
             'phone' => $phone,
             'otp' => $otp,
@@ -69,9 +69,9 @@ class UserRegisterController extends Controller
         ]);
 
         try {
-            // Send OTP via Twilio
+
             $this->twilio->messages->create(
-                '+95' . substr($phone, 1), // Myanmar country code + phone number
+                '+95' . substr($phone, 1),
                 [
                     'from' => config('services.twilio.from'),
                     'body' => "Your verification code is: $otp. This code will expire in 5 minutes."
@@ -119,7 +119,7 @@ class UserRegisterController extends Controller
                 'otp' => $request->otp,
                 'current_time' => now()->format('Y-m-d H:i:s')
             ]);
-            
+
             return response()->json([
                 'error' => 'Invalid or expired OTP'
             ], 422);
@@ -149,18 +149,19 @@ class UserRegisterController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|regex:/^09[0-9]{9}$/',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,astrology,customer'
+            'role' => 'required|in:admin,astrology,customer',
+            'dob' => 'required|date'
         ];
-    
+
         $validator = Validator::make($request->all(), $rules);
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-    
+
         try {
             $user = User::where('phone', $request->phone)->first();
-    
+
             if ($user) {
                 // Update existing user
                 $user->update([
@@ -168,6 +169,7 @@ class UserRegisterController extends Controller
                     'password' => Hash::make($request->password),
                     'role' => $request->role,
                     'is_verified' => true,
+                    'dob' => $request->dob
                 ]);
             } else {
                 // Create new user
@@ -177,11 +179,12 @@ class UserRegisterController extends Controller
                     'password' => Hash::make($request->password),
                     'role' => $request->role,
                     'is_verified' => true,
+                    'dob' => $request->dob
                 ]);
             }
-    
+
             $token = $user->createToken('auth_token')->plainTextToken;
-    
+
             return response()->json([
                 'token' => $token,
                 'user' => [
@@ -191,10 +194,10 @@ class UserRegisterController extends Controller
                     'role' => $user->role,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
-                    'is_verified' => $user->is_verified
+                    'is_verified' => $user->is_verified,
+                    'dob' => $user->dob
                 ]
             ], 201);
-    
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Registration failed',
@@ -202,7 +205,96 @@ class UserRegisterController extends Controller
             ], 500);
         }
     }
-    
 
+    public function useredit(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        $rules = [
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,'.$user->id,
+            'phone' => 'sometimes|string|regex:/^09[0-9]{9}$/|unique:users,phone,'.$user->id,
+            'dob' => 'sometimes|date',
+            'address' => 'sometimes|string',
+            'hour' => 'sometimes|string',
+            'minute' => 'sometimes|string',
+            'profile' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'sometimes|array', 
+            'image.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', 
+            'password' => 'sometimes|string|min:8'
+        ];
     
+        $validator = Validator::make($request->all(), $rules);
+    
+        if ($validator->fails()) {
+            Log::info('Validation failed: ', $validator->errors()->toArray()); 
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+    
+        try {
+            $updateData = $request->only([
+                'name', 'email', 'phone', 'dob', 'address', 
+                'hour', 'minute'
+            ]);
+    
+           
+            if ($request->hasFile('profile')) {
+                $profilePath = $request->file('profile')->store('profiles', 'public');
+                $updateData['profile'] = $profilePath;
+            }
+    
+            
+            if ($request->hasFile('image')) {
+                $imageFiles = $request->file('image');
+                $imagePaths = $user->image ?? [];
+    
+                
+                $files = is_array($imageFiles) ? $imageFiles : [$imageFiles];
+                
+                foreach ($files as $image) {
+                    if (count($imagePaths) >= 5) {
+                        break;                  
+                    }
+                    $path = $image->store('user_images', 'public');
+                    $imagePaths[] = $path;
+                }
+                
+                $updateData['image'] = $imagePaths;
+            }
+    
+            if ($request->has('password')) {
+                $updateData['password'] = Hash::make($request->password);
+            }
+    
+            $user->update($updateData);
+    
+            return response()->json([
+                'message' => 'Profile updated successfully',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'dob' => $user->dob,
+                    'address' => $user->address,
+                    'hour' => $user->hour,
+                    'minute' => $user->minute,
+                    'profile' => $user->profile ? asset('storage/'.$user->profile) : null,
+                    'image' => $user->image ? array_map(function($path, $index) {
+                        return [$index + 1 => asset('storage/' . $path)];
+                    }, $user->image, array_keys($user->image)) : [],
+                    'role' => $user->role,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                    'is_verified' => $user->is_verified
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Update failed: ' . $e->getMessage());   
+            return response()->json([
+                'message' => 'Profile update failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

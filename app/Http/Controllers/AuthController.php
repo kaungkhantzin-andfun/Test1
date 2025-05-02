@@ -13,29 +13,33 @@ use Illuminate\Support\Facades\Log;
 class AuthController extends Controller
 {
     public function login(LoginRequest $request)
-    {  
-      
-        Log::info('Login attempt started');
-        Log::info('Request data:', $request->all());
-        
+    {
         $user = User::where('phone', $request->phone)->first();
-        Log::info('User found:', $user ? ['id' => $user->id, 'phone' => $user->phone] : 'No user found');
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            Log::info('Login failed - invalid credentials');
-            throw ValidationException::withMessages([
-                'phone' => ['The provided credentials are incorrect.'],
-            ]);
+    
+        if (!$user) {
+            return response()->json([
+                'message' => 'No user found with this phone number'
+            ], 401);
         }
-
-        Log::info('Login successful');
+    
+        if (!Hash::check($request->password, $user->password)) {
+           
+            logger()->error('Password mismatch', [
+                'input' => $request->password,
+                'stored_hash' => $user->password,
+                'rehashed_input' => Hash::make($request->password)
+            ]);
+            
+            return response()->json([
+                'message' => 'Incorrect password'
+            ], 401);
+        }
+    
         return response()->json([
             'token' => $user->createToken($request->device_name)->plainTextToken,
-            'user' => $user,
-            'role' => $user->role,
+            'user' => $user->makeHidden(['password', 'remember_token'])
         ]);
     }
-
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

@@ -15,6 +15,12 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'dob',
+        'address',
+        'image',
+        'hour',
+        'minute',           
+        'profile',
         'password',
         'role',
         'otp',
@@ -32,6 +38,7 @@ class User extends Authenticatable
         'expires_at' => 'datetime',
         'is_verified' => 'boolean',
         'password' => 'hashed',
+         'image' => 'array'
     ];
 
     public function isAdmin()
