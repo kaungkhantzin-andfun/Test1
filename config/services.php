@@ -14,9 +14,9 @@ return [
     |
     */
     'twilio' => [
-    'sid' => env('TWILIO_SID'),
-    'token' => env('TWILIO_AUTH_TOKEN'),
-    'from' => env('TWILIO_FROM_NUMBER'),
+    'sid' => 'ACeae618f88d660bd2a3c79226f35be47a',
+    'token' => '772d0f628b3a2cc10957947191289cd9',
+    'from' => '+19565393202',
 ],
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),

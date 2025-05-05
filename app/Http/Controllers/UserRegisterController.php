@@ -18,17 +18,10 @@ class UserRegisterController extends Controller
 
     public function __construct()
     {
-        $sid = config('services.twilio.sid');
-        $token = config('services.twilio.token');
-        $from = config('services.twilio.from');
-        
-        Log::info('Twilio Configuration', [
-            'sid_exists' => !empty($sid),
-            'token_exists' => !empty($token),
-            'from_exists' => !empty($from)
-        ]);
-        
-        $this->twilio = new Client($sid, $token);
+        $this->twilio = new Client(
+            config('services.twilio.sid'),
+            config('services.twilio.token')
+        );
     }
 
     /**
