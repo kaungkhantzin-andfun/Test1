@@ -30,21 +30,90 @@ class UserRegisterController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
+    // public function sendOtp(Request $request): JsonResponse
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'phone' => 'required|string|regex:/^09[0-9]{9}$/',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json(['errors' => $validator->errors()], 422);
+    //     }
+
+    //     $phone = $request->phone;
+    //     $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+    //     $expiresAt = now()->addMinutes(5);
+
+
+    //     $user = User::firstOrCreate(
+    //         ['phone' => $phone],
+    //         [
+    //             'name' => 'New User',
+    //             'password' => Hash::make(Str::random(16)),
+    //             'role' => 'customer',
+    //             'is_verified' => false
+    //         ]
+    //     );
+
+
+    //     $user->update([
+    //         'otp' => $otp,
+    //         'expires_at' => $expiresAt
+    //     ]);
+
+
+    //     Log::info('OTP sent successfully', [
+    //         'phone' => $phone,
+    //         'otp' => $otp,
+    //         'expires_at' => $expiresAt->format('Y-m-d H:i:s')
+    //     ]);
+
+    //     try {
+
+    //         $this->twilio->messages->create(
+    //             '+95' . substr($phone, 1),
+    //             [
+    //                 'from' => config('services.twilio.from'),
+    //                 'body' => "Your verification code is: $otp. This code will expire in 5 minutes."
+    //             ]
+    //         );
+
+    //         return response()->json([
+    //             'message' => 'OTP sent successfully',
+    //             'phone' => $phone
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'error' => 'Failed to send OTP',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
     public function sendOtp(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'phone' => 'required|string|regex:/^09[0-9]{9}$/',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-
+    
         $phone = $request->phone;
+    
+        // ✅ Check if phone is already registered with verified account
+        $existingUser = User::where('phone', $phone)->first();
+        if ($existingUser && $existingUser->is_verified) {
+            return response()->json([
+                'error' => 'Phone number is already registered and verified.'
+            ], 409); // 409 Conflict
+        }
+    
+        // ✅ Generate OTP
         $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
         $expiresAt = now()->addMinutes(5);
-
-
+    
+        // ✅ Create or get existing user (unverified)
         $user = User::firstOrCreate(
             ['phone' => $phone],
             [
@@ -54,22 +123,20 @@ class UserRegisterController extends Controller
                 'is_verified' => false
             ]
         );
-
-
+    
+        // ✅ Update OTP
         $user->update([
             'otp' => $otp,
             'expires_at' => $expiresAt
         ]);
-
-
+    
         Log::info('OTP sent successfully', [
             'phone' => $phone,
             'otp' => $otp,
             'expires_at' => $expiresAt->format('Y-m-d H:i:s')
         ]);
-
+    
         try {
-
             $this->twilio->messages->create(
                 '+95' . substr($phone, 1),
                 [
@@ -77,7 +144,7 @@ class UserRegisterController extends Controller
                     'body' => "Your verification code is: $otp. This code will expire in 5 minutes."
                 ]
             );
-
+    
             return response()->json([
                 'message' => 'OTP sent successfully',
                 'phone' => $phone
@@ -89,7 +156,7 @@ class UserRegisterController extends Controller
             ], 500);
         }
     }
-
+    
     /**
      * Verify OTP
      *
@@ -212,7 +279,7 @@ class UserRegisterController extends Controller
         
         $rules = [
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,'.$user->id,
+          'email' => 'sometimes|nullable|email|unique:users,email,' . $user->id,
             'phone' => 'sometimes|string|regex:/^09[0-9]{9}$/|unique:users,phone,'.$user->id,
             'dob' => 'sometimes|date',
             'address' => 'sometimes|string',
