@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserRegisterController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\QuestionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
@@ -21,4 +22,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/profile', [ProfileController::class, 'adminProfile']);
     Route::get('/astrology/profile', [ProfileController::class, 'astrologyProfile']);
     Route::get('/customer/profile', [ProfileController::class, 'customerProfile']);
+
+     Route::post('/questions', [QuestionController::class, 'create']);
 });
