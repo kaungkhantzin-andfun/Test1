@@ -2,25 +2,43 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Astrologer extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
+        'user_id',
         'name',
-        'dob',
-        'description',
-        'type',
-        'status',
-        'profile_image'
+        'email',
+        'phone',
+        'bio',
+        'specialization',
+        'experience',
+        'profile_photo',
+        'status'
     ];
 
     protected $casts = [
-        'dob' => 'date'
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
-    public function questions()
+    /**
+     * Get the user that owns the astrologer profile.
+     */
+    public function user()
     {
-        return $this->hasMany(Question::class, 'choice_astrologer', 'id');
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the tasks for the astrologer.
+     */
+    public function tasks()
+    {
+        return $this->hasMany(Toask::class, 'astrologers_id');
     }
 }
