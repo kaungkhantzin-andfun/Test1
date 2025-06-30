@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             CategoriesTableSeeder::class,
             AstrologersTableSeeder::class,
             UsersTableSeeder::class,
+            TypeSeeder::class,
         ]);
 
         User::factory()->create([

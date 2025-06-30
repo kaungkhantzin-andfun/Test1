@@ -55,4 +55,19 @@ class User extends Authenticatable
     {
         return $this->role === 'customer';
     }
+
+    public function inMoney()
+    {
+        return $this->hasMany(InMoney::class);
+    }
+
+    public function userMoney()
+    {
+        return $this->hasOne(UserMoney::class);
+    }
+
+    public function moneyHistories()
+    {
+        return $this->hasMany(MoneyHistory::class);
+    }
 }

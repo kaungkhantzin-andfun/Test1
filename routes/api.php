@@ -9,11 +9,19 @@ use App\Http\Controllers\FreeBaydinController;
 use App\Http\Controllers\BadyinToaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\AstrologerController;
+
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/register', [UserRegisterController::class, 'register']);
+
+
+    Route::get('/astrologers', [AstrologerController::class, 'index']);  
+    Route::post('/astrologers', [AstrologerController::class, 'store']); 
+    Route::get('/astrologers/{id}', [AstrologerController::class, 'show']); 
+    Route::put('/astrologers/{id}', [AstrologerController::class, 'update']); 
+    Route::delete('/astrologers/{id}', [AstrologerController::class, 'destroy']); 
 
 Route::post('/freebaydin/search', [FreeBaydinController::class, 'search']);
 
@@ -40,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
      Route::post('/toasks', [BadyinToaskController::class, 'create']);
+     
+     // Money input endpoint
+     Route::post('/money/input', [UserRegisterController::class, 'moneyinput']);
      Route::get('/toasks', [BadyinToaskController::class, 'index']);
      Route::get('/toasks/{id}', [BadyinToaskController::class, 'show']);
      Route::put('/toasks/{id}', [BadyinToaskController::class, 'update']);
@@ -49,5 +60,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/available-astrologers', [BadyinToaskController::class, 'getAvailableAstrologers']);
     Route::get('/astrologer-tasks/{astrologerId}', [BadyinToaskController::class, 'getAstrologerTasks']);
     Route::patch('/toasks/{id}/status', [BadyinToaskController::class, 'updateTaskStatus']);
+
+
+    ///////////money
+
+     Route::post('/user/moneyinput', [UserRegisterController::class, 'moneyinput']);
+     Route::get('/user/moneyinput_list', [UserRegisterController::class, 'moneyinputlist']);
+
+
+     Route::post('/user/moneyapprove', [UserRegisterController::class, 'moneyapprove']);
+
+
+     Route::get('/user/user_money_list', [UserRegisterController::class, 'user_money_list']);
+
+     Route::get('/user/banktyle', [UserRegisterController::class, 'banktyle']);
 });
 
